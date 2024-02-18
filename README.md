@@ -1,2 +1,2 @@
-# aerospace-landing-prediction
-Aerospace landing &amp; prediction
+# Aerospace Landing & Prediction
+CISC 352 Course Project
