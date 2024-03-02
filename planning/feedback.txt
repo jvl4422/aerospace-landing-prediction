@@ -1,0 +1,2 @@
+When running the problem through the planning.domains, OPTIC says the problem is unsolvable but then prints out a solution. 
+Should we be concerned about this? Or is it ok if we can get another planner to solve it (Temporal Fast Downward)
