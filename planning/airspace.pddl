@@ -11,16 +11,15 @@
 
 )
 
-; un-comment following line if constants are needed
-;(:constants )
-
 ; Predicates apply to a specific type of object, or to all objects. 
 ; Predicates are either true or false at any point in a plan and when not declared are assumed to be false
 (:predicates ;todo: define predicates here
         (landed ?pln - airplane ?rwy - runway)
+        (canland ?pln - airplane)
         (rwystatus-empty)
         (rwylight)
-        (canland ?pln - airplane)
+        (rwymedium)
+        
 )
 
 
@@ -28,6 +27,7 @@
   ; lets see if we can do inheritance
   ; represents what time a plane is allowed to land if we cannot use timed initial literals
   ; looks like I do not have to give this a type but I can just say minimize / maximize at the end
+  ; the landing possible at is my workaround for no support of timed literals
   (total-time)
   (landing-possible-at ?pln - airplane)
 )
@@ -40,7 +40,7 @@
     :duration (= ?duration 1)
     :condition (and 
         (at start (not (canland ?pln)))
-        (at start (>= (landing-possible-at ?pln) (total-time)))
+        (at start (<= (landing-possible-at ?pln) (total-time)))
     )
     :effect (and 
         (at end (canland ?pln))
@@ -48,7 +48,48 @@
     )
 )
 
+; There is no difference between light vs medium vs heavy vs super landing times
+; when they don't land behind another plane. 
+; But we do need to categorize so we can set the correct flag for most recently landed
+(:durative-action land-init-light
+    :parameters (
+      ?pln - light
+      ?rwy - runway
+    )
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwystatus-empty))
+        (at start (canland ?pln))
+        )
+    :effect (and 
+        (at end (landed ?pln ?rwy))
+        (at end (rwylight))
+        (at end (not (rwystatus-empty)))
+        (at end (not (canland ?pln)))
+        (at end (increase(total-time) 2))
+        )
 
+)
+
+(:durative-action land-init-medium
+    :parameters (
+      ?pln - medium
+      ?rwy - runway
+    )
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwystatus-empty))
+        (at start (canland ?pln))
+        )
+    :effect (and 
+        (at end (landed ?pln ?rwy))
+        (at end (rwymedium))
+        (at end (not (rwystatus-empty)))
+        (at end (not (canland ?pln)))
+        (at end (increase(total-time) 2))
+        )
+
+)
 
 (:durative-action land-light-light
     :parameters (
@@ -58,7 +99,7 @@
     )
     ; 45 seconds / 60 seconds = 0.76 of a minute
     ; because I am not sure if I am allowed to use decimals, we will just call it one minute
-    :duration (= ?duration 1)
+    :duration (= ?duration 2)
     :condition (and 
         (at start (rwylight))
         (at start (canland ?pln))
@@ -73,27 +114,53 @@
               )
 )
 
-; There is no difference between light vs medium vs heavy vs super landing times
-; when they don't land behind another plane. 
-; But we do need to categorize so we can set the correct flag for most recently landed
-(:durative-action land-init-light
+; light medium does not require extra time
+(:durative-action land-light-medium
+    :parameters (
+      ?pln - medium
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwylight))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwymedium))
+              (at end (not (rwylight)))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 2))
+              )
+)
+
+(:durative-action land-medium-light
     :parameters (
       ?pln - light
       ?rwy - runway
+
     )
-    :duration (= ?duration 1)
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 4)
     :condition (and 
-        (at start (rwystatus-empty))
+        (at start (rwymedium))
         (at start (canland ?pln))
         )
-    :effect (and 
-        (at end (landed ?pln ?rwy))
-        (at end (rwylight))
-        (at end (not (rwystatus-empty)))
-        (at end (not (canland ?pln)))
-        (at end (increase(total-time) 2))
-        )
-
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwylight))
+              (at end (not (rwymedium)))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 4))
+              )
 )
 
 )
