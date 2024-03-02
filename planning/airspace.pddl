@@ -5,7 +5,7 @@
 (:requirements :strips :durative-actions :typing :conditional-effects :equality)
 
 (:types ;todo: enumerate types and their hierarchy here, e.g. car truck bus - vehicle
-    runway airplane clock - object 
+    runway airplane - object 
     ; Following ICAO categories..... 
     light medium heavy super - airplane
 
@@ -19,6 +19,7 @@
         (rwystatus-empty)
         (rwylight)
         (rwymedium)
+        (rwyheavy)
         
 )
 
@@ -48,6 +49,8 @@
     )
 )
 
+
+; LANDING INITIALS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; There is no difference between light vs medium vs heavy vs super landing times
 ; when they don't land behind another plane. 
 ; But we do need to categorize so we can set the correct flag for most recently landed
@@ -60,6 +63,7 @@
     :condition (and 
         (at start (rwystatus-empty))
         (at start (canland ?pln))
+        (at start (< (total-time) 1))
         )
     :effect (and 
         (at end (landed ?pln ?rwy))
@@ -80,6 +84,7 @@
     :condition (and 
         (at start (rwystatus-empty))
         (at start (canland ?pln))
+        (at start (< (total-time) 1))
         )
     :effect (and 
         (at end (landed ?pln ?rwy))
@@ -91,6 +96,28 @@
 
 )
 
+(:durative-action land-init-heavy
+    :parameters (
+      ?pln - heavy
+      ?rwy - runway
+    )
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwystatus-empty))
+        (at start (canland ?pln))
+        (at start (< (total-time) 1))
+        )
+    :effect (and 
+        (at end (landed ?pln ?rwy))
+        (at end (rwyheavy))
+        (at end (not (rwystatus-empty)))
+        (at end (not (canland ?pln)))
+        (at end (increase(total-time) 2))
+        )
+
+)
+
+; LANDING SEQUENTIAL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (:durative-action land-light-light
     :parameters (
       ?pln - light
@@ -160,6 +187,149 @@
               (at end (not (rwymedium)))
               (at end (not (canland ?pln)))
               (at end (increase(total-time) 4))
+              )
+)
+
+(:durative-action land-medium-medium
+    :parameters (
+      ?pln - medium
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwymedium))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwymedium))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 2))
+              )
+)
+
+(:durative-action land-light-heavy
+    :parameters (
+      ?pln - heavy
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwylight))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwyheavy))
+              (at end (not (rwylight)))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 2))
+              )
+)
+
+(:durative-action land-heavy-light
+    :parameters (
+      ?pln - light
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 4)
+    :condition (and 
+        (at start (rwyheavy))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwylight))
+              (at end (not (rwyheavy)))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 4))
+              )
+)
+
+(:durative-action land-medium-heavy
+    :parameters (
+      ?pln - heavy
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwymedium))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwyheavy))
+              (at end (not (rwymedium)))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 2))
+              )
+)
+
+
+(:durative-action land-heavy-medium
+    :parameters (
+      ?pln - medium
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 3)
+    :condition (and 
+        (at start (rwyheavy))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwymedium))
+              (at end (not (rwyheavy)))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 3))
+              )
+)
+
+(:durative-action land-heavy-heavy
+    :parameters (
+      ?pln - heavy
+      ?rwy - runway
+
+    )
+    ; 45 seconds / 60 seconds = 0.76 of a minute
+    ; because I am not sure if I am allowed to use decimals, we will just call it one minute
+    :duration (= ?duration 2)
+    :condition (and 
+        (at start (rwyheavy))
+        (at start (canland ?pln))
+        )
+        
+    ; I feel like the double at end condition is longer than it needs to be
+    :effect
+        ( and (at end  (landed ?pln ?rwy))
+              (at end (rwyheavy))
+              (at end (not (canland ?pln)))
+              (at end (increase(total-time) 2))
               )
 )
 

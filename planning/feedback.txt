@@ -2,4 +2,32 @@ When running the problem through the planning.domains, OPTIC says the problem is
 Should we be concerned about this? Or is it ok if we can get another planner to solve it (Temporal Fast Downward)
 
 I am also working with a modified time version because temporal fast downward does not like actions with duration of 0.
-So, approving a plane to land takes one time unit, and every other action takes actual time + 1. 
+So, approving a plane to land takes one time unit, and every other action takes actual time + 1. This means that there
+are some weird time calculations being made within the problem statement. 
+
+I tried to add a waiting action which would allow a schedule that is not fully packed (back to back)
+but it fails, I will leave in the waiting action. Do you happen to have any tips on how to solve this Or
+whether it is possible to have such an action? 
+
+(:durative-action wait
+    :parameters (
+      ?pln - airplane
+    )
+    :duration (= ?duration 1)
+    :condition (
+      and (not (canland ?pln))
+    )
+    :effect (and 
+        (at end (increase(total-time) 1))
+    )
+)
+
+Link I got my data from : http://www.lhr-lgw.co.uk/lhr-movements/2024-02-lhr/mlhr010224.txt
+
+The rwy variable is also arbitrary right now because we are only dealing with optimizing one runway. 
+
+Is there a way to make the domain less verbose? A lot of the actions and durations apply to multiple objects
+
+I also have yet to implement the super class, since only one plane corresponds to it (Airbus A380)
+
+LIMITATIONS: This currently cannot handle a scenario where the schedule is not full. 
