@@ -1,2 +1,5 @@
 When running the problem through the planning.domains, OPTIC says the problem is unsolvable but then prints out a solution. 
 Should we be concerned about this? Or is it ok if we can get another planner to solve it (Temporal Fast Downward)
+
+I am also working with a modified time version because temporal fast downward does not like actions with duration of 0.
+So, approving a plane to land takes one time unit, and every other action takes actual time + 1. 
