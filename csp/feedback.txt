@@ -1,0 +1,20 @@
+Getting data for this is an absolute pain, so I will focus on the longer haul flights and destinations and the subsequent
+fleet of planes that are suitable to operate those routes. I will also abstract and say that every flight operates every
+day because it is quite tedious as airlines don't really publish which days they fly. I am also going to be using an
+abstracted suitability metric, because right now that makes sense.
+
+100 is the value if that plane is "optimal" for that destination, meaning KLM has advertised that this aircraft flies this route
+75 if the plane actively flies this route, but it is not an advertised destination by KLM
+50 if the plane is "ok" for that destination, meaning it can operate the route because other planes of that type do, but it
+has not operated that route itself.
+0 if the plane is "unsuitable" for that destination (meaning it is not able to fly to that destination)
+This will not explicitly be represented in any of the tables but it will be applied as a value if none of the aircraft
+have serviced that destination (at least on the week long record and advertised destination lists)
+
+Challenges: Curating the dataset myself is VERY tedious. No existing dataset of what I am trying to replicate for any airline
+The publicly available data also only goes back one week so is not really representative of a year round model. I also
+want to be able to give it a list of destinations, then it satisfies those destinations according to all of the planes
+Otherwise, my model will be impossible to solve as there are more destinations than planes. Additionally, there is no
+error checking,
+
+12 b787 - 8 (b7878)
