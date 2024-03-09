@@ -12,9 +12,10 @@ This will not explicitly be represented in any of the tables but it will be appl
 have serviced that destination (at least on the week long record and advertised destination lists)
 
 Challenges: Curating the dataset myself is VERY tedious. No existing dataset of what I am trying to replicate for any airline
-The publicly available data also only goes back one week so is not really representative of a year round model. I also
-want to be able to give it a list of destinations, then it satisfies those destinations according to all of the planes
-Otherwise, my model will be impossible to solve as there are more destinations than planes. Additionally, there is no
-error checking,
+The publicly available data also only goes back one week so is not really representative of a year round model.
+Otherwise, my model will be impossible to solve when the number of destinations does not exactly match the number of planes.
+Additionally, there is no error checking, I think if an invalid destination is entered it will just break.
+I also do not think it is possible to have duplicate destinations.
 
-12 b787 - 8 (b7878)
+LASTLY: I would like to further compartmentalize this code. I think formatting the data and passing it to the model
+be two different functions. I will make this change after the draft submission bc everything works now.
