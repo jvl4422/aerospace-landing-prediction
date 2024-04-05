@@ -55,7 +55,8 @@ def format_model():
     for eachplane in planes:
         for eachdest in dests_to_serve:
             # I am still not entirely sure what the fstring is for but anyway!
-            varbs[eachplane, eachdest] = model.NewBoolVar(f"varbs[{eachplane},{eachdest}]")
+            entry = model.NewBoolVar(f"v[{eachplane},{eachdest}]")
+            varbs[(eachplane, eachdest)] = entry
 
     # Now we add our constraints
 
@@ -70,7 +71,7 @@ def format_model():
 
     # Add constraints to ensure one plan does not fly to multiple destinations
     i = 0
-    while i < len(dests_to_serve):
+    while i < len(tack):
         model.AddExactlyOne(tack[i])
         i += 1
 
@@ -90,7 +91,8 @@ def format_model():
     objective_terms = []
     for eachplane in planes:
         for eachdestidx in idx_to_serve.keys():
-            objective_terms.append(a330200[eachplane][eachdestidx] * varbs[eachplane, idx_to_serve[eachdestidx]])
+            if a330200[eachplane][eachdestidx] > 0:
+                objective_terms.append(a330200[eachplane][eachdestidx] * varbs[eachplane, idx_to_serve[eachdestidx]])
     model.Maximize(sum(objective_terms))
     return model, planes, idx_to_serve, varbs, a330200
 
@@ -113,6 +115,9 @@ def solve_results(model, planes, dests, varbs, fitscores):
                         f"Plane {plane} assigned to fly to {dests[destination]}."
                         + f" Fit score = {fitscores[plane][destination]}"
                     )
+        print("=====Stats:======")
+        print(solver.SolutionInfo())
+        print(solver.ResponseStats())
     else:
         print("No solution found.")
 
