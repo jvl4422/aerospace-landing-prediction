@@ -1,1 +1,25 @@
-toronto montreal vancouver oranjestad atlanta miami bonaire kilimanjaro berlin dublin mumbai nice
+saltlakecity
+mexicocity
+taipei
+manila
+tokyo
+saopaolo
+accra
+losangeles
+lima
+nairobi
+panamacity
+sanjosecr
+hongkong
+capetown
+paramaribo
+istanbul
+newcastle
+berlin
+oslo
+porto
+milan
+gothenburg
+malaga
+prague
+ground

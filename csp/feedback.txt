@@ -7,15 +7,23 @@ abstracted suitability metric, because right now that makes sense.
 75 if the plane actively flies this route, but it is not an advertised destination by KLM
 50 if the plane is "ok" for that destination, meaning it can operate the route because other planes of that type do, but it
 has not operated that route itself.
+25 if the plane can technically operate the route, but realistically it rarely does, unless there are special circumstances
+A plane will receive a 25 either if the distance is far too short or very close to the top of the range
 0 if the plane is "unsuitable" for that destination (meaning it is not able to fly to that destination)
-This will not explicitly be represented in any of the tables but it will be applied as a value if none of the aircraft
-have serviced that destination (at least on the week long record and advertised destination lists)
+
 
 Challenges: Curating the dataset myself is VERY tedious. No existing dataset of what I am trying to replicate for any airline
 The publicly available data also only goes back one week so is not really representative of a year round model.
-Otherwise, my model will be impossible to solve when the number of destinations does not exactly match the number of planes.
-Additionally, there is no error checking, I think if an invalid destination is entered it will just break.
-I also do not think it is possible to have duplicate destinations.
 
-LASTLY: I would like to further compartmentalize this code. I think formatting the data and passing it to the model
-be two different functions. I will make this change after the draft submission bc everything works now.
+Model is now possilble to solve when there are fewer destinations than planes. You will need to then add "ground"
+as a destination to serve to indicate to the model that the destination list is not full. If it is full, you cannot
+have model as it will try to assign "ground" as if it were a destination.
+
+Additionally, there is no error checking, I think if an invalid destination is entered it will just break.
+
+I also do not think it is possible to have duplicate destinations, but realistically I would like this to maybe be feasible
+
+Right now, I am only using planes that have names according to: https://www.airfleets.net/flottecie/KLM-active-b737ng-0-typeasc.htm
+and planes that have not been stored.
+
+B737-3 I went up to PH-BXD.... stopped for now

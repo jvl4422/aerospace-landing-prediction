@@ -51,14 +51,16 @@ def format_model():
     # Now that we have isolated our data, we are ready to create our variables.
     varbs = {}
     # Create a boolean variable for each plane and destination combination.
-
     for eachplane in planes:
         for eachdest in dests_to_serve:
-            # I am still not entirely sure what the fstring is for but anyway!
+            # Name our boolean variable and add it to our variable dictionary
             entry = model.NewBoolVar(f"v[{eachplane},{eachdest}]")
             varbs[(eachplane, eachdest)] = entry
 
     # Now we add our constraints
+
+    # TODO: Modify constraints so that when there is a destination that ~cannot~ be served by a particular plane
+    # The constraint enforces that. I am not sure whether that might require removing the boolean variable as an option.
 
     # This constraint makes sure that one plane is not assigned to multiple destinations
     tack = []
@@ -69,23 +71,29 @@ def format_model():
         tack.append(diffList)
         # print(diffList, "must cannot all be true")
 
-    # Add constraints to ensure one plan does not fly to multiple destinations
+    # Add constraints to ensure one plane does not fly to multiple destinations
     i = 0
     while i < len(tack):
         model.AddExactlyOne(tack[i])
         i += 1
 
 
+    # This constraint ensures that one destination is not served by multiple planes
     # Ensure that one destination is not served by multiple planes.
     for eachdest in dests_to_serve:
         diffList = []
-        if eachdest == "none":
-            pass
-        else:
-            for eachplane in planes:
-                diffList.append(varbs[eachplane, eachdest])
+        for eachplane in planes:
+            diffList.append(varbs[eachplane, eachdest])
         # print(diffList, "cannot all be true")
-        model.AddExactlyOne(diffList)
+        if eachdest == "ground":
+            # Logically, any number of none constraints can be true. THey can be true ONLY IF there are
+            # destinations than planes, and the plane has not been assigned any other value.
+
+            # Maybe if I pass and don't make any constraints it'll work
+            pass
+            # model.Add(diffList).OnlyEnforceIf(len(planes) > len(dests_to_serve))
+        else:
+            model.AddExactlyOne(diffList)
 
     # Now set the objective of maximizing the fit scores
     objective_terms = []
@@ -110,9 +118,14 @@ def solve_results(model, planes, dests, varbs, fitscores):
         print("Assignments are as follows: ")
         for plane in planes:
             for destination in dests.keys():
-                if solver.BooleanValue(varbs[plane, dests[destination]]):
+                if solver.BooleanValue(varbs[plane, dests[destination]]) and dests[destination] != "ground":
                     print(
                         f"Plane {plane} assigned to fly to {dests[destination]}."
+                        + f" Fit score = {fitscores[plane][destination]}"
+                    )
+                elif solver.BooleanValue(varbs[plane, dests[destination]]) and dests[destination] == "ground":
+                    print(
+                        f"Plane {plane} has been grounded."
                         + f" Fit score = {fitscores[plane][destination]}"
                     )
         print("=====Stats:======")
