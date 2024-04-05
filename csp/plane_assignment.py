@@ -68,10 +68,9 @@ def format_model():
         tack.append(diffList)
         # print(diffList, "must cannot all be true")
 
-    # TODO: Strange bug but this is the only way to get it to work and have unique planes flying to unique destinations
-    # I need to figure out how to resolve this lol bc hardcoding is NOT the answer
+    # Add constraints to ensure one plan does not fly to multiple destinations
     i = 0
-    while i < 8:
+    while i < len(dests_to_serve):
         model.AddExactlyOne(tack[i])
         i += 1
 
@@ -79,8 +78,11 @@ def format_model():
     # Ensure that one destination is not served by multiple planes.
     for eachdest in dests_to_serve:
         diffList = []
-        for eachplane in planes:
-            diffList.append(varbs[eachplane, eachdest])
+        if eachdest == "none":
+            pass
+        else:
+            for eachplane in planes:
+                diffList.append(varbs[eachplane, eachdest])
         # print(diffList, "cannot all be true")
         model.AddExactlyOne(diffList)
 
@@ -94,8 +96,6 @@ def format_model():
 
 """
 This method solves the constraint satisfaction problem and prints the results to the console. 
-
-
 """
 def solve_results(model, planes, dests, varbs, fitscores):
     solver = cp_model.CpSolver()
