@@ -64,18 +64,52 @@ def format_model():
 
     # This constraint makes sure that one plane is not assigned to multiple destinations
     tack = []
+    xorlist = []
     for eachplane in planes:
+        # Will track destinations to ensure that one plane is not assigned to multiple destinations
         diffList = []
-        for eachdest in dests_to_serve:
-            diffList.append(varbs[eachplane,eachdest])
+        # Will track destinations to ensure that
+        xorelems = []
+        # This is a flag that represents if we need to add a constraint. It will flag if there is a destination
+        # that a plane cannot serve. Then we must make sure it is grounded instead of flying to that destination
+        findground = False
+        for eachdestidx in idx_to_serve:
+            score = a330200[eachplane][eachdestidx]
+            if score < 1:
+                # If we have not been assigned to a destination that is servable (We have been
+                # assigned to an unservable destination) THEN we must be grounded
+                # If we have not been assigned to any destinations that are servable, THEN we MUST be grounded
+                xorelems.append(varbs[(eachplane, all_dests[eachdestidx])].Not())
+                findground = True
+            # We use one to correspond to grounded
+            elif score == 1 and findground:
+                xorelems.append(varbs[(eachplane, all_dests[eachdestidx])])
+            diffList.append(varbs[eachplane,all_dests[eachdestidx]])
         tack.append(diffList)
+        # If we have a plane with unservable destinations, add it to the list of constraints
+        if len(xorelems) != 0:
+            xorlist.append(xorelems)
         # print(diffList, "must cannot all be true")
+
+    # Adding intermediate variable. It represents whether we have been able to add a servable destination
+    b = model.NewBoolVar("b")
 
     # Add constraints to ensure one plane does not fly to multiple destinations
     i = 0
     while i < len(tack):
         model.AddExactlyOne(tack[i])
         i += 1
+
+    # Add constraint to ensure that if our plane has not been assigned ONE servable destinations (Exclusive Or)
+    # then it HAS to be grounded
+    i = 0
+    while i < len(xorlist):
+        # We will only enforce this constraint if we have not been able to add a servable destination
+        model.AddBoolAnd(xorlist[i]).OnlyEnforceIf(b.Not())
+        i += 1
+
+
+# Maybe I can make a constraint where if the plane has not been assigned a destination it can serve, then it MUST be grounded
 
 
     # This constraint ensures that one destination is not served by multiple planes
