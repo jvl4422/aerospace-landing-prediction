@@ -27,3 +27,14 @@ Right now, I am only using planes that have names according to: https://www.airf
 and planes that have not been stored.
 
 B737-3 I went up to PH-BXD.... stopped for now
+
+NOW I have finished getting planes. I will try to create a KLM schedule that begins at 12:30 on April 10th,
+I will write down the destinations in exact order. I will ONLY look at flights operated by KLM, not transavia or
+KLM cityhopper. If the destination does not exist, I will add it and add corresponding scores.
+After the model has been run, I will take a look at any "questionable" scores (scores of 25),
+as they indicate that a plane taht really shouldn't be used for that type of route is being used. Then, I
+investigate whether it is even possible for that plane to land at that airport. In the case that it is
+not (787 in glasgow) I will put zeroes across for that plane type, then rerun the model.
+
+Was able to get the schedule to go to 16:40, lets call taht a good 4 hr prediction, especially since I have a
+severly limited number of planes and the smaller ones will do multiple flights, most likely after 4 hours

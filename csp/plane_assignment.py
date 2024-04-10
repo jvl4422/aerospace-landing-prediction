@@ -100,8 +100,7 @@ def format_model():
         model.AddExactlyOne(tack[i])
         i += 1
 
-    # Add constraint to ensure that if our plane has not been assigned ONE servable destinations (Exclusive Or)
-    # then it HAS to be grounded
+    # Add constraint to ensure that no destination with a fit score of 0 can be true, instead grounded HAS to be true
     i = 0
     while i < len(xorlist):
         # We will only enforce this constraint if we have not been able to add a servable destination
@@ -150,8 +149,8 @@ def solve_results(model, planes, dests, varbs, fitscores):
             print("Optimal Solution")
         print(f"Fit score = {solver.ObjectiveValue()}\n out of", len(planes)*100)
         print("Assignments are as follows: ")
-        for plane in planes:
-            for destination in dests.keys():
+        for destination in dests.keys():
+            for plane in planes:
                 if solver.BooleanValue(varbs[plane, dests[destination]]) and dests[destination] != "ground":
                     print(
                         f"Plane {plane} assigned to fly to {dests[destination]}."
