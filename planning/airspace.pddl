@@ -38,10 +38,12 @@
 (:durative-action now-landing-possible
     :parameters (
       ?pln - airplane
+      ?rwy - runway
     )
     :duration (= ?duration 1)
     :condition (and 
         (at start (not (canland ?pln)))
+        (at start (not (landed ?pln ?rwy)))
         (at start (<= (landing-possible-at ?pln) (total-time)))
     )
     :effect (and 
