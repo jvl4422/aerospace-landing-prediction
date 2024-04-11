@@ -51,51 +51,94 @@ def format_model():
     # Now that we have isolated our data, we are ready to create our variables.
     varbs = {}
     # Create a boolean variable for each plane and destination combination.
-
     for eachplane in planes:
         for eachdest in dests_to_serve:
-            # I am still not entirely sure what the fstring is for but anyway!
-            varbs[eachplane, eachdest] = model.NewBoolVar(f"varbs[{eachplane},{eachdest}]")
+            # Name our boolean variable and add it to our variable dictionary
+            entry = model.NewBoolVar(f"v[{eachplane},{eachdest}]")
+            varbs[(eachplane, eachdest)] = entry
 
     # Now we add our constraints
 
+    # TODO: Modify constraints so that when there is a destination that ~cannot~ be served by a particular plane
+    # The constraint enforces that. I am not sure whether that might require removing the boolean variable as an option.
+
     # This constraint makes sure that one plane is not assigned to multiple destinations
     tack = []
+    xorlist = []
     for eachplane in planes:
+        # Will track destinations to ensure that one plane is not assigned to multiple destinations
         diffList = []
-        for eachdest in dests_to_serve:
-            diffList.append(varbs[eachplane,eachdest])
+        # Will track destinations to ensure that
+        xorelems = []
+        # This is a flag that represents if we need to add a constraint. It will flag if there is a destination
+        # that a plane cannot serve. Then we must make sure it is grounded instead of flying to that destination
+        findground = False
+        for eachdestidx in idx_to_serve:
+            score = a330200[eachplane][eachdestidx]
+            if score < 1:
+                # If we have not been assigned to a destination that is servable (We have been
+                # assigned to an unservable destination) THEN we must be grounded
+                # If we have not been assigned to any destinations that are servable, THEN we MUST be grounded
+                xorelems.append(varbs[(eachplane, all_dests[eachdestidx])].Not())
+                findground = True
+            # We use one to correspond to grounded
+            elif score == 1 and findground:
+                xorelems.append(varbs[(eachplane, all_dests[eachdestidx])])
+            diffList.append(varbs[eachplane,all_dests[eachdestidx]])
         tack.append(diffList)
+        # If we have a plane with unservable destinations, add it to the list of constraints
+        if len(xorelems) != 0:
+            xorlist.append(xorelems)
         # print(diffList, "must cannot all be true")
 
-    # TODO: Strange bug but this is the only way to get it to work and have unique planes flying to unique destinations
-    # I need to figure out how to resolve this lol bc hardcoding is NOT the answer
+    # Adding intermediate variable. It represents whether we have been able to add a servable destination
+    b = model.NewBoolVar("b")
+
+    # Add constraints to ensure one plane does not fly to multiple destinations
     i = 0
-    while i < 8:
+    while i < len(tack):
         model.AddExactlyOne(tack[i])
         i += 1
 
+    # Add constraint to ensure that no destination with a fit score of 0 can be true, instead grounded HAS to be true
+    i = 0
+    while i < len(xorlist):
+        # We will only enforce this constraint if we have not been able to add a servable destination
+        model.AddBoolAnd(xorlist[i]).OnlyEnforceIf(b.Not())
+        i += 1
 
+
+# Maybe I can make a constraint where if the plane has not been assigned a destination it can serve, then it MUST be grounded
+
+
+    # This constraint ensures that one destination is not served by multiple planes
     # Ensure that one destination is not served by multiple planes.
     for eachdest in dests_to_serve:
         diffList = []
         for eachplane in planes:
             diffList.append(varbs[eachplane, eachdest])
         # print(diffList, "cannot all be true")
-        model.AddExactlyOne(diffList)
+        if eachdest == "ground":
+            # Logically, any number of none constraints can be true. THey can be true ONLY IF there are
+            # destinations than planes, and the plane has not been assigned any other value.
+
+            # Maybe if I pass and don't make any constraints it'll work
+            pass
+            # model.Add(diffList).OnlyEnforceIf(len(planes) > len(dests_to_serve))
+        else:
+            model.AddExactlyOne(diffList)
 
     # Now set the objective of maximizing the fit scores
     objective_terms = []
     for eachplane in planes:
         for eachdestidx in idx_to_serve.keys():
-            objective_terms.append(a330200[eachplane][eachdestidx] * varbs[eachplane, idx_to_serve[eachdestidx]])
+            if a330200[eachplane][eachdestidx] > 0:
+                objective_terms.append(a330200[eachplane][eachdestidx] * varbs[eachplane, idx_to_serve[eachdestidx]])
     model.Maximize(sum(objective_terms))
     return model, planes, idx_to_serve, varbs, a330200
 
 """
 This method solves the constraint satisfaction problem and prints the results to the console. 
-
-
 """
 def solve_results(model, planes, dests, varbs, fitscores):
     solver = cp_model.CpSolver()
@@ -106,13 +149,21 @@ def solve_results(model, planes, dests, varbs, fitscores):
             print("Optimal Solution")
         print(f"Fit score = {solver.ObjectiveValue()}\n out of", len(planes)*100)
         print("Assignments are as follows: ")
-        for plane in planes:
-            for destination in dests.keys():
-                if solver.BooleanValue(varbs[plane, dests[destination]]):
+        for destination in dests.keys():
+            for plane in planes:
+                if solver.BooleanValue(varbs[plane, dests[destination]]) and dests[destination] != "ground":
                     print(
                         f"Plane {plane} assigned to fly to {dests[destination]}."
                         + f" Fit score = {fitscores[plane][destination]}"
                     )
+                elif solver.BooleanValue(varbs[plane, dests[destination]]) and dests[destination] == "ground":
+                    print(
+                        f"Plane {plane} has been grounded."
+                        + f" Fit score = {fitscores[plane][destination]}"
+                    )
+        print("=====Stats:======")
+        print(solver.SolutionInfo())
+        print(solver.ResponseStats())
     else:
         print("No solution found.")
 
