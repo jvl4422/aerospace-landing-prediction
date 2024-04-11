@@ -6,7 +6,7 @@ import math
 
 
 flights = pd.read_csv('flights.csv')
-desired_airport = 'ORD'  # Filter data to be only departing at SFO
+desired_airport = 'ORD'  # Filter data to be only departing at 'ORD' (Chicago O'Hare Airport)
 
 # Filter the DataFrame to include only rows where the airport column matches the desired airport code
 flight_df = flights[flights['ORIGIN_AIRPORT'] == desired_airport]
@@ -15,7 +15,7 @@ flight_df = flights[flights['ORIGIN_AIRPORT'] == desired_airport]
 flight_df = flight_df[flight_df['DEPARTURE_DELAY'].notna()]
 
 """ Create column that determines whether flight has a departure delay. If the departure delay is greater
- than 15 it is significant enough to be classified as a delay (this number can be changed). """
+ than 15 it is significant enough to be classified as a delay."""
 result=[]
 for row in flight_df['DEPARTURE_DELAY']:
   if row > 15:
@@ -27,7 +27,7 @@ flight_df['result'] = result
 
 
 """Modify the date and time format to be the same as the weather date and time. 
- This will make merging the datasets possible"""
+ This will make merging the datasets possible."""
 
 # The time input is 24h time but does not have a consitant length. This fills the time with 
 # zeros so that it is able to be split into hour and minute.
@@ -43,22 +43,22 @@ flight_df['rounded_hour'] = round(hour + minute / 60)
 # Create 'time' column. This is standard date time format which corresponds to weather date and time.
 flight_df['time'] = pd.to_datetime(flight_df[['YEAR', 'MONTH', 'DAY']]) + pd.to_timedelta(flight_df['rounded_hour'], unit='h')
 
-# print(flight_df[flight_df['DEPARTURE_DELAY'] < 1])
 
 
 
 
 
 """ Weather Data """
-start = datetime(2015, 12, 1, 00, 00) 
-end = datetime(2015, 12, 29, 23, 59) # Year, Month, Day, Hour, Minute
+start = datetime(2015, 12, 1, 00, 00) # Year, Month, Day, Hour, Minute
+end = datetime(2015, 12, 29, 23, 59)
 tz = "America/Chicago"
-data1 = Hourly('72530', start, end, tz) # '72537' is the code for DTW
+data1 = Hourly('72530', start, end, tz) # '72530' is the code for ORD
 
 data1 = data1.fetch()
 
-""" Fixing the DateTime index to remove the timezone addition '--06:00' """
-# If you want to name the new column that contains the old index values:
+""" Fixing the DateTime index to remove the timezone addition '--06:00' 
+    (America/Chicago is not the standard timezone). """
+
 data1 = data1.reset_index()
 
 # Ensure the 'time' column is treated as string
@@ -84,10 +84,7 @@ print(data1)
 print("-----------------------------------------------------------")
 
 
-""" Merge the flight and weather data together. The merge is done through the column 'time' on each.
-    Time includes the date and time. As the flight data includes multiple of the same hour the merge
-    is supposed to keep the integrity of the data. I am not sure how correct this merge is I need to 
-    look into it more and get second opinions."""
+""" Merge the flight and weather data together. The merge is done through the column 'time' on each."""
 flight_df.set_index('time', inplace=True)
 merged_df = pd.merge(flight_df, data1, on='time', how='inner')
 
@@ -100,8 +97,6 @@ merged_df = merged_df.drop(columns=['DAY_OF_WEEK', 'AIRLINE', 'FLIGHT_NUMBER',
        'ARRIVAL_DELAY', 'DIVERTED', 'CANCELLED', 'CANCELLATION_REASON',
        'AIR_SYSTEM_DELAY', 'SECURITY_DELAY', 'AIRLINE_DELAY',
        'LATE_AIRCRAFT_DELAY', 'WEATHER_DELAY', 'coco'])
-
-# print(merged_df)
 
 
 
@@ -195,7 +190,7 @@ log_probability_delay_given_rain = log_probability_rain_delays - log_probability
 # Converting the log probability back to a regular probability for interpretation
 probability_delay_given_rain = math.exp(log_probability_delay_given_rain)
 
-print("Probability of rain", probability_rain)
+# print("Probability of rain", probability_rain)
 print("Probability of delays given rain", probability_delay_given_rain)
 
 
@@ -222,7 +217,7 @@ log_probability_delay_given_snow = log_probability_snow_delays - log_probability
 # Converting the log probability back to a regular probability for interpretation
 probability_delay_given_snow = math.exp(log_probability_delay_given_snow)
 
-print("Probability of snow", probability_snow)
+# print("Probability of snow", probability_snow)
 print("Probability of delays given snow", probability_delay_given_snow)
 
 
@@ -253,7 +248,7 @@ log_probability_delay_given_fog = log_probability_fog_delays - log_probability_f
 # Converting the log probability back to a regular probability for interpretation
 probability_delay_given_fog = math.exp(log_probability_delay_given_fog)
 
-print("Probability of fog", probability_fog)
+# print("Probability of fog", probability_fog)
 print("Probability of delays given fog", probability_delay_given_fog)
 
 
@@ -272,22 +267,60 @@ print("Probability of delay given rain and wind: ", probability_delay_given_rain
 
 
 # Probability of delay given snow and wind
-probability_wind_snow_delay = (merged_df[(merged_df['wspd'] > 30) & (merged_df['prcp'] > 2) & (merged_df['temp'] <= 2) & (merged_df['result'] == 1)]).shape[0]/count_total
-probability_snow_wind = (merged_df[(merged_df['wspd'] > 30) & (merged_df['prcp'] > 2) & (merged_df['temp'] <= 2)]).shape[0]/count_total
+probability_wind_snow_delay = (merged_df[(merged_df['wspd'] > 30) & (merged_df['prcp'] > 0.5) & (merged_df['temp'] <= 2) & (merged_df['result'] == 1)]).shape[0]/count_total
+probability_snow_wind = (merged_df[(merged_df['wspd'] > 30) & (merged_df['prcp'] > 0.5) & (merged_df['temp'] <= 2)]).shape[0]/count_total
 probability_snow_given_wind = probability_snow_wind/probability_wind
 probability_delay_given_snow_wind = probability_wind_snow_delay/ (probability_wind * probability_snow_given_wind)
 print("Probability of delay given snow and wind: ", probability_delay_given_snow_wind)
 
 # Probability of delay given rain and fog
-probability_fog_rain_delay = (merged_df[(merged_df['rhum'] >= 95) & (abs(merged_df['temp'] - merged_df['dwpt']) < 2.5) 
-                        & (merged_df['wspd'] < 6) & (merged_df['result'] == 1) & (merged_df['prcp'] > 2) & (merged_df['temp'] > 2)]).shape[0]/count_total
-probability_rain_fog = (merged_df[(merged_df['rhum'] >= 95) & (abs(merged_df['temp'] - merged_df['dwpt']) < 2.5) 
-                        & (merged_df['wspd'] < 6) & (merged_df['prcp'] > 2) & (merged_df['temp'] > 2)]).shape[0]/count_total
-probability_rain_given_fog = probability_rain_fog/probability_fog
-probability_delay_given_rain_fog = probability_fog_rain_delay/ (probability_fog * probability_rain_given_fog)
-print("Probability of delay given fog and rain: ", probability_delay_given_rain_fog)
+# probability_fog_rain_delay = (merged_df[(merged_df['rhum'] >= 95) & (abs(merged_df['temp'] - merged_df['dwpt']) < 2.5) 
+#                         & (merged_df['wspd'] < 6) & (merged_df['result'] == 1) & (merged_df['prcp'] > 2) & (merged_df['temp'] > 2)]).shape[0]/count_total
+# probability_rain_fog = (merged_df[(merged_df['rhum'] >= 95) & (abs(merged_df['temp'] - merged_df['dwpt']) < 2.5) 
+#                         & (merged_df['wspd'] < 6) & (merged_df['prcp'] > 2) & (merged_df['temp'] > 2)]).shape[0]/count_total
+# probability_rain_given_fog = probability_rain_fog/probability_fog
+# probability_delay_given_rain_fog = probability_fog_rain_delay/ (probability_fog * probability_rain_given_fog)
+# print("Probability of delay given fog and rain: ", probability_delay_given_rain_fog)
 
 
 
-""" User Input Predictions """
+""" Logistic regression comparison """
+
+merged_df = merged_df.dropna(subset=['wspd', 'temp', 'prcp', 'rhum'])
+
+# Example using Pandas to create subsets
+rainy_days = merged_df[merged_df['prcp'] > 2 & (merged_df['temp'] > 2)]  # Assume precipitation greater than 2mm defines rain
+windy_days = merged_df[merged_df['wspd'] > 30]  # Wind speed greater than 30 km/h defines wind
+snowy_days = merged_df[(merged_df['prcp'] > 0.5) & (merged_df['temp'] <= 2)]  # Precipitation and low temp define snow
+snow_wind = merged_df[(merged_df['prcp'] > 0.5) & (merged_df['temp'] <= 2) & (merged_df['wspd'] > 30)]
+rain_wind = merged_df[(merged_df['prcp'] > 2) & (merged_df['temp'] > 2) & (merged_df['wspd'] > 30)]
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+def train_model(data_subset):
+    X = data_subset[['temp', 'wspd', 'prcp']]  # Example features
+    y = data_subset['result']  # Delays
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+    
+    return accuracy
+
+rain_accuracy = train_model(rainy_days)
+wind_accuracy = train_model(windy_days)
+snow_accuracy = train_model(snowy_days)
+snow_wind_accuracy = train_model(snow_wind)
+rain_wind_accuracy = train_model(rain_wind)
+
+
+print("Accuracy on rainy days:", rain_accuracy)
+print("Accuracy on windy days:", wind_accuracy)
+print("Accuracy on snowy days:", snow_accuracy)
+print("Accuracy on snowy windy days:", snow_wind_accuracy)
+print("Accuracy on rainy windy days:", rain_wind_accuracy)
 
