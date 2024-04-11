@@ -306,7 +306,7 @@
 
 (:durative-action land-super-light
     :parameters (
-      ?pln - super
+      ?pln - light
       ?rwy - runway
 
     )
