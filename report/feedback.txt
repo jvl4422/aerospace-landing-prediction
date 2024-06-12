@@ -1,7 +1,0 @@
-I couldn't find a report template on OnQ so I went with the standard IEEE report format, I hope that is ok! I also think the structure might be a little bit awkward since we are essentially running three experiments within this report that aren't totally related to each other. But, maybe there are subsections that I can use. That would make it work
-
-We also did not really get our data through ~academic means~ (aka reading research papers). Though the information we used was reliable, how can we appropriately cite things like FlightRadar24 and the KLM website? 
-
-For all of the libraries / methods I am using, do I also need to cite where to get them? I didn't for now but I will update if that is necessary. 
-
-For PDDL, should I be discussing my implementation and predicates more in depth? 
