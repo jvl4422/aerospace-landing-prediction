@@ -1,4 +1,4 @@
-# Aerospace Landing & Prediction
+# Smart Skies: Machine Learning and Optimization Solutions for Modern Aviation Challenges
 ## Abstract
 The aviation industry serves as a critical component of global commerce, facilitating economic growth, tourism, and emergency response efforts. However, it faces escalating challenges, including airport congestion and heightened post-pandemic travel demands. In this paper, we address three key issues within aviation through the application of techniques in artificial intelligence. Firstly, we will tackle the complex task of assigning airplanes to routes, considering factors such as range requirements and past flight data. Secondly, we propose methods to optimize landing lineups, crucial for enhancing airport efficiency, particularly in congested airports such as London Heathrow. Finally, we delve into Bayesian inference techniques to analyze the probabilities of flight delays, providing insights for proactive mitigation strategies. Further exploration of these solutions introduces interesting solutions to the evolving challenges facing the aviation industry.
 
